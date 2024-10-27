@@ -2,10 +2,15 @@ import React from "react";
 import styled from "styled-components";
 import Switch from "./Switch";
 
-function Navbar({ searchValue, setSearchValue, getSearchData, units, setUnits}) {
+function Navbar({ searchValue, setSearchValue, getSearchData, units, setUnits, getWeather}) {
   const handleChange = (event) => {
     setSearchValue(event.target.value);
-};
+  };
+  const handleToggle = () => {
+    setUnits(units === 'metric' ? 'imperial' : 'metric')
+    getWeather()
+  }
+
   return (
     <NavBar>
       <div>
@@ -13,7 +18,7 @@ function Navbar({ searchValue, setSearchValue, getSearchData, units, setUnits}) 
           value={searchValue} />
         <button onClick={getSearchData}>Search</button>
       </div>
-      <Switch handleToggle={()=> setUnits(units === 'metric' ? 'imperial' : 'metric')} isOn={units=== 'metric'}/>
+      <Switch handleToggle={handleToggle} isOn={units=== 'metric'}/>
     </NavBar>
   );
 }

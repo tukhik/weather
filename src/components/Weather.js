@@ -4,15 +4,15 @@ import Navbar from './Navbar'
 import Modal from './Modal';
 
 const WeatherForecast = () => {
-    const [units, setUnits] = useState('metric'); // Default to metric
+    const apiKey = '6593100b5b8602160614fcf0f1a1f252';
+    const [units, setUnits] = useState('metric');
     const [loading, setLoading] = useState(true);
     const [forecast, setForecast] = useState(null);
     const [error, setError] = useState(null);
     const [inputValue, setInputValue] = useState('');
-
-    const fetchWeatherData = async () => {
-        const apiKey = '6593100b5b8602160614fcf0f1a1f252';
-        const city = inputValue || 'Yerevan';
+    
+    const fetchWeatherData = async (cityName) => {
+        const city = inputValue || cityName;
 
         const url = `http://api.openweathermap.org/data/2.5/forecast?q=${city}&units=${units}&appid=${apiKey}`;
         try {
@@ -24,9 +24,45 @@ const WeatherForecast = () => {
             setLoading(false);
         }
     };
+
     useEffect(() => {
-        fetchWeatherData();
-    }, [units]);
+        const getLocation = () => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                const { latitude, longitude } = position.coords;
+                if(!inputValue){
+                    await getCityName(latitude, longitude);
+                }
+                setLoading(false);
+              },
+              (err) => {
+                setError(err.message);
+                setLoading(false);
+              }
+            );
+          } else {
+            setError('Geolocation is not supported by this browser.');
+            setLoading(false);
+          }
+        };
+        
+        const getCityName = async (lat, lon) => {
+          try {
+            const response = await axios.get(
+              `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+            );
+            fetchWeatherData(response.data?.name)
+            setInputValue(response.data?.name)
+          } catch (err) {
+            setError('Unable to retrieve city name.');
+          }
+        };
+    
+        getLocation();
+        // eslint-disable-next-line
+      }, [units]);
+    
 
     const closeErrorModal = () => {
         setError(null);
@@ -43,6 +79,7 @@ const WeatherForecast = () => {
                 getSearchData={fetchWeatherData}
                 units={units}
                 setUnits={setUnits}
+                getWeather={fetchWeatherData}
             />
             <h2>{forecast?.city.name}</h2>
             {forecast && (
